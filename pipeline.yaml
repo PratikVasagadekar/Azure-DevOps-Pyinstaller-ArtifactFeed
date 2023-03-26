@@ -1,0 +1,59 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+
+trigger:
+  branches:
+    include:
+      - release
+  tags:
+    include:
+      - release*
+  paths:
+    exclude:
+      - /*
+
+pool:
+  name: Default
+  
+strategy:
+  matrix:
+    Python310:
+      python.version: '3.10'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.11'
+    architecture: 'x64'
+- script: pip install -r requirements.txt
+  displayName: 'Install dependencies'
+
+- script: |
+    pyinstaller -y demo.spec
+  displayName: 'Build pyInstaller Application'
+  
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)\dist'
+    includeRootFolder: false 
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)\dist\release.zip'
+  displayName: 'Archive and Copy to Artifact Staging'
+
+- task: UniversalPackages@0
+  inputs:
+    command: 'publish'
+    publishDirectory: '$(Build.ArtifactStagingDirectory)\dist'
+    feedsToUse: 'internal'
+    vstsFeedPublish: 'releases'
+    packagePublishDescription: 'My published artifacts'
+    vstsPackageVersion: 'v1.0.0'
+    vstsFeedPackagePublish: 'release'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    artifactName: '$(Agent.OS)'
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)\dist\release.zip'
