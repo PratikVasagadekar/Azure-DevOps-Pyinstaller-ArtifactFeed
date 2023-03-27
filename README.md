@@ -1,5 +1,3 @@
-# Untitled
-
 ## Azure Pipeline to Build Pyinstaller Executable (EXE), Publish it as Pipeline Artifact, and Push it to Azure Artifacts Feed.
 
 ---
